@@ -1,0 +1,190 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CFPB Complaint Intelligence</title>
+
+    <style>
+
+        body{
+            font-family: Arial, Helvetica, sans-serif;
+            background:#f4f4f4;
+            margin:0;
+            padding:40px;
+        }
+
+        .container{
+
+            max-width:700px;
+
+            margin:auto;
+
+            background:white;
+
+            padding:30px;
+
+            border-radius:10px;
+
+            box-shadow:0px 0px 10px rgba(0,0,0,0.15);
+
+        }
+
+        h1{
+
+            text-align:center;
+
+            color:#333;
+
+        }
+
+        p{
+
+            text-align:center;
+
+            color:#666;
+
+        }
+
+        textarea{
+
+            width:100%;
+
+            padding:12px;
+
+            font-size:16px;
+
+            border-radius:5px;
+
+            border:1px solid #ccc;
+
+            resize:vertical;
+
+            box-sizing:border-box;
+
+        }
+
+        button{
+
+            width:100%;
+
+            margin-top:20px;
+
+            padding:12px;
+
+            background:#007BFF;
+
+            color:white;
+
+            border:none;
+
+            border-radius:5px;
+
+            cursor:pointer;
+
+            font-size:16px;
+
+        }
+
+        button:hover{
+
+            background:#0056b3;
+
+        }
+
+        .result{
+
+            margin-top:30px;
+
+            padding:20px;
+
+            border-radius:8px;
+
+            background:#f8f9fa;
+
+            border-left:5px solid #007BFF;
+
+        }
+
+        .label{
+
+            font-weight:bold;
+
+            color:#333;
+
+        }
+
+        .value{
+
+            color:#007BFF;
+
+            font-size:18px;
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>CFPB Complaint Intelligence</h1>
+
+    <p>
+        Enter a customer complaint below to predict its
+        <b>Product Category</b> and <b>Urgency</b>.
+    </p>
+
+    <form action="/predict" method="POST">
+
+        <textarea
+            name="text"
+            rows="8"
+            placeholder="Enter customer complaint here..."
+            required></textarea>
+
+        <button type="submit">
+
+            Predict
+
+        </button>
+
+    </form>
+
+    {% if product is not none and urgency is not none %}
+
+    <div class="result">
+
+        <p>
+
+            <span class="label">Predicted Product :</span>
+
+            <span class="value">{{ product }}</span>
+
+        </p>
+
+        <p>
+
+            <span class="label">Urgency :</span>
+
+            <span class="value">{{ urgency }}</span>
+
+        </p>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+</body>
+
+</html>
+```
