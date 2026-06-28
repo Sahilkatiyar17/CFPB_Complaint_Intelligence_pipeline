@@ -1,7 +1,4 @@
 import os
-os.add_dll_directory(r'C:\Users\kashi\miniconda3\envs\atlas\lib\site-packages\torch\lib')
-os.add_dll_directory(r'C:\Users\kashi\miniconda3\envs\atlas')
-os.add_dll_directory(r'C:\Windows\System32')
 
 # rest of your imports...
 import pandas as pd
