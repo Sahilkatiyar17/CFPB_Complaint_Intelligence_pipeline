@@ -1,11 +1,4 @@
-import os
-torch_lib = r'C:\Users\kashi\miniconda3\envs\atlas312\lib\site-packages\torch\lib'
-conda_env = r'C:\Users\kashi\miniconda3\envs\atlas312'
-os.environ['PATH'] = torch_lib + ';' + conda_env + ';' + os.environ['PATH']
-
-import ctypes
-ctypes.CDLL(torch_lib + r'\c10.dll')
-ctypes.CDLL(torch_lib + r'\torch_cpu.dll')
+import os 
 
 import warnings
 warnings.filterwarnings('error')
