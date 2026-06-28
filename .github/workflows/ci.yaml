@@ -22,6 +22,7 @@ jobs:
 
       - name: install dependencies
         run: |
+          pip install --upgrade pip setuptools
           pip install -r requirements.txt
 
       - name: Download NLTK data
