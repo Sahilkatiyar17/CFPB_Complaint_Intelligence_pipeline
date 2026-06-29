@@ -32,11 +32,6 @@ spec:
             secretKeyRef:
               name: capstone-secret
               key: CAPSTONE_TEST
-        - name: DAGSHUB_USER_TOKEN
-          valueFrom:
-            secretKeyRef:
-              name: capstone-secret
-              key: CAPSTONE_TEST
 
 ---
 apiVersion: v1
@@ -45,6 +40,7 @@ metadata:
   name: flask-app-service
   annotations:
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: http
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "300"
 spec:
   type: LoadBalancer
   selector:
