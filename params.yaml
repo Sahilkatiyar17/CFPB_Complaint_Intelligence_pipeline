@@ -1,6 +1,8 @@
+#both model training pipeline
 data:
   text_column: narrative
   target_column: "Timely response?"
+  product_target_column: product_5
 
 data_ingestion:
   input_path: ./notebooks/complaints_small.csv
@@ -15,8 +17,8 @@ data_split:
   train_output: ./data_artifacts/split/train.csv
   val_output: ./data_artifacts/split/validation.csv
   test_output: ./data_artifacts/split/test.csv
-  test_size: 0.20 # 20% split off from full data first
-  val_size: 0.50 # 50% of that 20% → 10% val, 10% test
+  test_size: 0.20
+  val_size: 0.50
 
 data_balancing:
   train_input: ./data_artifacts/split/train.csv
@@ -30,6 +32,10 @@ embedding:
   val_batch_size: 200
   test_batch_size: 200
   output_folder: ./data_artifacts/embeddings
+
+# -----------------------------------------------------
+# Urgency Model (XGBoost)
+# -----------------------------------------------------
 
 train:
   n_estimators: 584
@@ -45,8 +51,85 @@ train:
 model_evaluation:
   model_path: ./models/xgboost_model.json
   embeddings_folder: ./data_artifacts/embeddings
-  metrics_path: ./reports/metrics.json
-  experiment_info_path: ./reports/experiment_info.json
+  metrics_path: ./reports/metrics_urgency.json
+  experiment_info_path: ./reports/experiment_info_urgency.json
 
 register_model:
   model_name: CFPB_XGBoost_Timely_Response
+
+# -----------------------------------------------------
+# Product Model (PyTorch MLP)
+# -----------------------------------------------------
+
+train_product:
+  learning_rate: 0.0001
+  hidden_layers: "412-256"
+  embedding_dimension: 384
+  dropout: 0.2
+  optimizer: Adam
+  batch_size: 4098
+  epochs: 500
+  num_classes: 5
+  input_folder: ./data_artifacts/embeddings
+  output_path: ./models/mlp_model_product.pt
+
+model_evaluation_product:
+  metrics_path: ./reports/metrics_product.json
+  experiment_info_path: ./reports/experiment_info_product.json
+
+register_model_product:
+  model_name: CFPB_MLP_Product_Category
+
+#urgent training pipeline
+# data:
+#   text_column: narrative
+#   target_column: "Timely response?"
+
+# data_ingestion:
+#   input_path: ./notebooks/complaints_small.csv
+#   output_path: ./data_artifacts/raw/complaints_small.csv
+
+# data_preprocessing:
+#   input_path: ./data_artifacts/raw/complaints_small.csv
+#   output_path: ./data_artifacts/interim/complaints_small_processed.csv
+
+# data_split:
+#   input_path: ./data_artifacts/interim/complaints_small_processed.csv
+#   train_output: ./data_artifacts/split/train.csv
+#   val_output: ./data_artifacts/split/validation.csv
+#   test_output: ./data_artifacts/split/test.csv
+#   test_size: 0.20 # 20% split off from full data first
+#   val_size: 0.50 # 50% of that 20% → 10% val, 10% test
+
+# data_balancing:
+#   train_input: ./data_artifacts/split/train.csv
+#   val_input: ./data_artifacts/split/validation.csv
+#   test_input: ./data_artifacts/split/test.csv
+#   output_folder: ./data_artifacts/balanced
+
+# embedding:
+#   model_name: sentence-transformers/all-MiniLM-L6-v2
+#   train_batch_size: 400
+#   val_batch_size: 200
+#   test_batch_size: 200
+#   output_folder: ./data_artifacts/embeddings
+
+# train:
+#   n_estimators: 584
+#   max_depth: 6
+#   learning_rate: 0.1732000515002235
+#   subsample: 0.6619499828781406
+#   colsample_bytree: 0.8348183387297776
+#   reg_alpha: 8.802746880977654
+#   reg_lambda: 6.377823210234763
+#   input_folder: ./data_artifacts/embeddings
+#   output_path: ./models/xgboost_model.json
+
+# model_evaluation:
+#   model_path: ./models/xgboost_model.json
+#   embeddings_folder: ./data_artifacts/embeddings
+#   metrics_path: ./reports/metrics.json
+#   experiment_info_path: ./reports/experiment_info.json
+
+# register_model:
+#   model_name: CFPB_XGBoost_Timely_Response

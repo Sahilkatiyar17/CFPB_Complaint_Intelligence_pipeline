@@ -53,8 +53,8 @@ stages:
       nfiles: 1
     - path: src/data/data_split.py
       hash: md5
-      md5: 77d5d0fdc9e9c2ac299753bd094fd6eb
-      size: 3961
+      md5: 85d71af2ec0fcbf5d9c525a2e2f6fc4b
+      size: 6785
     params:
       params.yaml:
         data.target_column: Timely response?
@@ -69,23 +69,24 @@ stages:
     outs:
     - path: data_artifacts/split
       hash: md5
-      md5: 297e2d58c6aca492a1c899b45180aa09.dir
-      size: 476272
+      md5: 62554ce3348186884442111bdf95d3e5.dir
+      size: 584939
       nfiles: 3
   data_balancing:
     cmd: python -m src.data.data_balancing
     deps:
     - path: data_artifacts/split
       hash: md5
-      md5: 297e2d58c6aca492a1c899b45180aa09.dir
-      size: 476272
+      md5: 62554ce3348186884442111bdf95d3e5.dir
+      size: 584939
       nfiles: 3
     - path: src/data/data_balancing.py
       hash: md5
-      md5: 1eec6b4e24dd6c23bc4575e4efb28d1d
-      size: 3613
+      md5: 7ba704d435aeaade7f5a69cdad9e2748
+      size: 8749
     params:
       params.yaml:
+        data.product_target_column: product_5
         data.target_column: Timely response?
         data_balancing.output_folder: ./data_artifacts/balanced
         data_balancing.test_input: ./data_artifacts/split/test.csv
@@ -94,25 +95,27 @@ stages:
     outs:
     - path: data_artifacts/balanced
       hash: md5
-      md5: eb2a80cdff787dd4a9a3fa156092ba24.dir
-      size: 122280
-      nfiles: 3
+      md5: 1506b8822c8116f5e1850882ba83875e.dir
+      size: 450646
+      nfiles: 6
   embedding_generation:
     cmd: python -m src.data.embedding_generation
     deps:
     - path: data_artifacts/balanced
       hash: md5
-      md5: eb2a80cdff787dd4a9a3fa156092ba24.dir
-      size: 122280
-      nfiles: 3
+      md5: 1506b8822c8116f5e1850882ba83875e.dir
+      size: 450646
+      nfiles: 6
     - path: src/data/embedding_generation.py
       hash: md5
-      md5: f0290f6c3ee274f8fabd7567c7c57a34
-      size: 5414
+      md5: 2481738579968ac4d527111f9b8cff19
+      size: 12884
     params:
       params.yaml:
+        data.product_target_column: product_5
         data.target_column: Timely response?
         data.text_column: narrative
+        data_balancing.output_folder: ./data_artifacts/balanced
         embedding.model_name: sentence-transformers/all-MiniLM-L6-v2
         embedding.output_folder: ./data_artifacts/embeddings
         embedding.test_batch_size: 200
@@ -121,21 +124,21 @@ stages:
     outs:
     - path: data_artifacts/embeddings
       hash: md5
-      md5: 51bdbf7e8634ec7c69ed940a2319cc09.dir
-      size: 173696
-      nfiles: 6
+      md5: fa04b00731536988e79a43a63c0419df.dir
+      size: 552744
+      nfiles: 12
   train_xgboost:
     cmd: python -m src.model.train_xgboost
     deps:
     - path: data_artifacts/embeddings
       hash: md5
-      md5: 51bdbf7e8634ec7c69ed940a2319cc09.dir
-      size: 173696
-      nfiles: 6
+      md5: fa04b00731536988e79a43a63c0419df.dir
+      size: 552744
+      nfiles: 12
     - path: src/model/train_xgboost.py
       hash: md5
-      md5: 541f4d22819097680f54077319990659
-      size: 3147
+      md5: 10efebbc4eb5138bfeca08b4c3c7c163
+      size: 6536
     params:
       params.yaml:
         train.colsample_bytree: 0.8348183387297776
@@ -157,23 +160,31 @@ stages:
     deps:
     - path: data_artifacts/embeddings
       hash: md5
-      md5: 51bdbf7e8634ec7c69ed940a2319cc09.dir
-      size: 173696
-      nfiles: 6
+      md5: fa04b00731536988e79a43a63c0419df.dir
+      size: 552744
+      nfiles: 12
+    - path: models/mlp_model_product.pt
+      hash: md5
+      md5: 098c2dbc1a2629c7df0f433bfede1cba
+      size: 1065741
     - path: models/xgboost_model.json
       hash: md5
       md5: 5cb413e3e960315cfb6dda5346b21da1
       size: 238035
     - path: src/model/model_evaluation.py
       hash: md5
-      md5: a4f3296b600d0ec906331aee926af6f1
-      size: 6001
+      md5: 1a0496da497b07211ba58d819389d527
+      size: 15823
     params:
       params.yaml:
         model_evaluation.embeddings_folder: ./data_artifacts/embeddings
-        model_evaluation.experiment_info_path: ./reports/experiment_info.json
-        model_evaluation.metrics_path: ./reports/metrics.json
+        model_evaluation.experiment_info_path: 
+          ./reports/experiment_info_urgency.json
+        model_evaluation.metrics_path: ./reports/metrics_urgency.json
         model_evaluation.model_path: ./models/xgboost_model.json
+        model_evaluation_product.experiment_info_path: 
+          ./reports/experiment_info_product.json
+        model_evaluation_product.metrics_path: ./reports/metrics_product.json
         train.colsample_bytree: 0.8348183387297776
         train.learning_rate: 0.1732000515002235
         train.max_depth: 6
@@ -181,27 +192,79 @@ stages:
         train.reg_alpha: 8.802746880977654
         train.reg_lambda: 6.377823210234763
         train.subsample: 0.6619499828781406
+        train_product.batch_size: 4098
+        train_product.dropout: 0.2
+        train_product.embedding_dimension: 384
+        train_product.epochs: 500
+        train_product.hidden_layers: 412-256
+        train_product.learning_rate: 0.0001
+        train_product.num_classes: 5
     outs:
-    - path: reports/experiment_info.json
+    - path: reports/experiment_info_product.json
       hash: md5
-      md5: b344f3903e9c59c55b97d834bff5e593
-      size: 152
-    - path: reports/metrics.json
+      md5: 231cc30b814b4dd3e8ba273c0d2b93c2
+      size: 156
+    - path: reports/experiment_info_urgency.json
+      hash: md5
+      md5: 66d623f50ca75cfa9edc421a4126bf3e
+      size: 160
+    - path: reports/metrics_product.json
+      hash: md5
+      md5: a4260e688f79a43e9686646a7b1236b3
+      size: 1957
+    - path: reports/metrics_urgency.json
       hash: md5
       md5: a902cb1d898a8268ebae306ba14133a6
       size: 976
   register_model:
     cmd: python -m src.model.register_model
     deps:
-    - path: reports/experiment_info.json
+    - path: reports/experiment_info_product.json
       hash: md5
-      md5: b344f3903e9c59c55b97d834bff5e593
-      size: 152
+      md5: 231cc30b814b4dd3e8ba273c0d2b93c2
+      size: 156
+    - path: reports/experiment_info_urgency.json
+      hash: md5
+      md5: 66d623f50ca75cfa9edc421a4126bf3e
+      size: 160
     - path: src/model/register_model.py
       hash: md5
-      md5: 1d6d6a236e0efb45f3aebf44a246f9b5
-      size: 2532
+      md5: 05a893623cec5c52db058f5fce6cbae4
+      size: 6431
     params:
       params.yaml:
-        model_evaluation.experiment_info_path: ./reports/experiment_info.json
+        model_evaluation.experiment_info_path: 
+          ./reports/experiment_info_urgency.json
+        model_evaluation_product.experiment_info_path: 
+          ./reports/experiment_info_product.json
         register_model.model_name: CFPB_XGBoost_Timely_Response
+        register_model_product.model_name: CFPB_MLP_Product_Category
+  train_mlp_product:
+    cmd: python -m src.model.train_mlp_product
+    deps:
+    - path: data_artifacts/embeddings
+      hash: md5
+      md5: fa04b00731536988e79a43a63c0419df.dir
+      size: 552744
+      nfiles: 12
+    - path: src/model/train_mlp_product.py
+      hash: md5
+      md5: e10b5b143ac72f105f1507e413f62ab3
+      size: 7476
+    params:
+      params.yaml:
+        train_product.batch_size: 4098
+        train_product.dropout: 0.2
+        train_product.embedding_dimension: 384
+        train_product.epochs: 500
+        train_product.hidden_layers: 412-256
+        train_product.input_folder: ./data_artifacts/embeddings
+        train_product.learning_rate: 0.0001
+        train_product.num_classes: 5
+        train_product.optimizer: Adam
+        train_product.output_path: ./models/mlp_model_product.pt
+    outs:
+    - path: models/mlp_model_product.pt
+      hash: md5
+      md5: 098c2dbc1a2629c7df0f433bfede1cba
+      size: 1065741
