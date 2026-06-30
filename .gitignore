@@ -233,3 +233,7 @@ git ls-files data_artifacts
 data_artifacts/
 models/
 reports/
+notebooks/
+crashcourse.txt
+data_artifacts/
+.vscode/
