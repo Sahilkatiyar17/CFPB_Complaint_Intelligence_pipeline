@@ -1,0 +1,317 @@
+#both model training pipeline
+
+stages:
+  data_ingestion:
+    cmd: python -m src.data.data_ingestion
+    deps:
+      - src/data/data_ingestion.py
+    params:
+      - params.yaml:
+          - data.text_column
+          - data.target_column
+          - data_ingestion.input_path
+          - data_ingestion.output_path
+    outs:
+      - data_artifacts/raw
+
+  data_preprocessing:
+    cmd: python -m src.data.data_preprocessing
+    deps:
+      - data_artifacts/raw
+      - src/data/data_preprocessing.py
+    params:
+      - params.yaml:
+          - data.text_column
+          - data_preprocessing.input_path
+          - data_preprocessing.output_path
+    outs:
+      - data_artifacts/interim
+
+  data_split:
+    cmd: python -m src.data.data_split
+    deps:
+      - data_artifacts/interim
+      - src/data/data_split.py
+    params:
+      - params.yaml:
+          - data.text_column
+          - data.target_column
+          - data_split.input_path
+          - data_split.train_output
+          - data_split.val_output
+          - data_split.test_output
+          - data_split.test_size
+          - data_split.val_size
+    outs:
+      - data_artifacts/split
+
+  data_balancing:
+    cmd: python -m src.data.data_balancing
+    deps:
+      - data_artifacts/split
+      - src/data/data_balancing.py
+    params:
+      - params.yaml:
+          - data.target_column
+          - data.product_target_column
+          - data_balancing.train_input
+          - data_balancing.val_input
+          - data_balancing.test_input
+          - data_balancing.output_folder
+    outs:
+      - data_artifacts/balanced
+
+  embedding_generation:
+    cmd: python -m src.data.embedding_generation
+    deps:
+      - data_artifacts/balanced
+      - src/data/embedding_generation.py
+    params:
+      - params.yaml:
+          - data.text_column
+          - data.target_column
+          - data.product_target_column
+          - embedding.model_name
+          - embedding.train_batch_size
+          - embedding.val_batch_size
+          - embedding.test_batch_size
+          - embedding.output_folder
+          - data_balancing.output_folder
+    outs:
+      - data_artifacts/embeddings
+
+  # -----------------------------------------------------
+  # Urgency Model (XGBoost)
+  # -----------------------------------------------------
+
+  train_xgboost:
+    cmd: python -m src.model.train_xgboost
+    deps:
+      - data_artifacts/embeddings
+      - src/model/train_xgboost.py
+    params:
+      - params.yaml:
+          - train.n_estimators
+          - train.max_depth
+          - train.learning_rate
+          - train.subsample
+          - train.colsample_bytree
+          - train.reg_alpha
+          - train.reg_lambda
+          - train.input_folder
+          - train.output_path
+    outs:
+      - models/xgboost_model.json
+
+  # -----------------------------------------------------
+  # Product Model (PyTorch MLP)
+  # -----------------------------------------------------
+
+  train_mlp_product:
+    cmd: python -m src.model.train_mlp_product
+    deps:
+      - data_artifacts/embeddings
+      - src/model/train_mlp_product.py
+    params:
+      - params.yaml:
+          - train_product.learning_rate
+          - train_product.hidden_layers
+          - train_product.embedding_dimension
+          - train_product.dropout
+          - train_product.optimizer
+          - train_product.batch_size
+          - train_product.epochs
+          - train_product.num_classes
+          - train_product.input_folder
+          - train_product.output_path
+    outs:
+      - models/mlp_model_product.pt
+
+  # -----------------------------------------------------
+  # Evaluation (both models)
+  # -----------------------------------------------------
+
+  model_evaluation:
+    cmd: python -m src.model.model_evaluation
+    deps:
+      - models/xgboost_model.json
+      - models/mlp_model_product.pt
+      - data_artifacts/embeddings
+      - src/model/model_evaluation.py
+    params:
+      - params.yaml:
+          - train.n_estimators
+          - train.max_depth
+          - train.learning_rate
+          - train.subsample
+          - train.colsample_bytree
+          - train.reg_alpha
+          - train.reg_lambda
+          - train_product.learning_rate
+          - train_product.hidden_layers
+          - train_product.embedding_dimension
+          - train_product.dropout
+          - train_product.batch_size
+          - train_product.epochs
+          - train_product.num_classes
+          - model_evaluation.model_path
+          - model_evaluation.embeddings_folder
+          - model_evaluation.metrics_path
+          - model_evaluation.experiment_info_path
+          - model_evaluation_product.metrics_path
+          - model_evaluation_product.experiment_info_path
+    metrics:
+      - reports/metrics_urgency.json
+      - reports/metrics_product.json
+    outs:
+      - reports/experiment_info_urgency.json
+      - reports/experiment_info_product.json
+
+  # -----------------------------------------------------
+  # Registration (both models)
+  # -----------------------------------------------------
+
+  register_model:
+    cmd: python -m src.model.register_model
+    deps:
+      - reports/experiment_info_urgency.json
+      - reports/experiment_info_product.json
+      - src/model/register_model.py
+    params:
+      - params.yaml:
+          - register_model.model_name
+          - register_model_product.model_name
+          - model_evaluation.experiment_info_path
+          - model_evaluation_product.experiment_info_path
+
+#urgency model training pipeline
+
+# stages:
+#   data_ingestion:
+#     cmd: python -m src.data.data_ingestion
+#     deps:
+#       - src/data/data_ingestion.py
+#     params:
+#       - params.yaml:
+#           - data.text_column
+#           - data.target_column
+#           - data_ingestion.input_path
+#           - data_ingestion.output_path
+#     outs:
+#       - data_artifacts/raw
+
+#   data_preprocessing:
+#     cmd: python -m src.data.data_preprocessing
+#     deps:
+#       - data_artifacts/raw
+#       - src/data/data_preprocessing.py
+#     params:
+#       - params.yaml:
+#           - data.text_column
+#           - data_preprocessing.input_path
+#           - data_preprocessing.output_path
+#     outs:
+#       - data_artifacts/interim
+
+#   data_split:
+#     cmd: python -m src.data.data_split
+#     deps:
+#       - data_artifacts/interim
+#       - src/data/data_split.py
+#     params:
+#       - params.yaml:
+#           - data.text_column
+#           - data.target_column
+#           - data_split.input_path
+#           - data_split.train_output
+#           - data_split.val_output
+#           - data_split.test_output
+#           - data_split.test_size
+#           - data_split.val_size
+#     outs:
+#       - data_artifacts/split
+
+#   data_balancing:
+#     cmd: python -m src.data.data_balancing
+#     deps:
+#       - data_artifacts/split
+#       - src/data/data_balancing.py
+#     params:
+#       - params.yaml:
+#           - data.target_column
+#           - data_balancing.train_input
+#           - data_balancing.val_input
+#           - data_balancing.test_input
+#           - data_balancing.output_folder
+#     outs:
+#       - data_artifacts/balanced
+
+#   embedding_generation:
+#     cmd: python -m src.data.embedding_generation
+#     deps:
+#       - data_artifacts/balanced
+#       - src/data/embedding_generation.py
+#     params:
+#       - params.yaml:
+#           - data.text_column
+#           - data.target_column
+#           - embedding.model_name
+#           - embedding.train_batch_size
+#           - embedding.val_batch_size
+#           - embedding.test_batch_size
+#           - embedding.output_folder
+#     outs:
+#       - data_artifacts/embeddings
+
+#   train_xgboost:
+#     cmd: python -m src.model.train_xgboost
+#     deps:
+#       - data_artifacts/embeddings
+#       - src/model/train_xgboost.py
+#     params:
+#       - params.yaml:
+#           - train.n_estimators
+#           - train.max_depth
+#           - train.learning_rate
+#           - train.subsample
+#           - train.colsample_bytree
+#           - train.reg_alpha
+#           - train.reg_lambda
+#           - train.input_folder
+#           - train.output_path
+#     outs:
+#       - models/xgboost_model.json
+
+#   model_evaluation:
+#     cmd: python -m src.model.model_evaluation
+#     deps:
+#       - models/xgboost_model.json
+#       - data_artifacts/embeddings
+#       - src/model/model_evaluation.py
+#     params:
+#       - params.yaml:
+#           - train.n_estimators
+#           - train.max_depth
+#           - train.learning_rate
+#           - train.subsample
+#           - train.colsample_bytree
+#           - train.reg_alpha
+#           - train.reg_lambda
+#           - model_evaluation.model_path
+#           - model_evaluation.embeddings_folder
+#           - model_evaluation.metrics_path
+#           - model_evaluation.experiment_info_path
+#     metrics:
+#       - reports/metrics.json
+#     outs:
+#       - reports/experiment_info.json
+
+#   register_model:
+#     cmd: python -m src.model.register_model
+#     deps:
+#       - reports/experiment_info.json
+#       - src/model/register_model.py
+#     params:
+#       - params.yaml:
+#           - register_model.model_name
+#           - model_evaluation.experiment_info_path

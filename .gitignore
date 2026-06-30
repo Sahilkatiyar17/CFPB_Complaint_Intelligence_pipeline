@@ -217,6 +217,22 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 cred.txt
+
+notebooks/product/df_p.csv
+notebooks/urgent/df_u.csv
+notebooks/urgent/df_u_clean.csv
+notebooks/complaints.csv
+notebooks/complaints_small.csv
+
+gitcrashcourse.txt
+
+local_s3/
+git ls-files data_artifacts
+.vscode/
+
+data_artifacts/
+models/
+reports/
 notebooks/
 crashcourse.txt
 data_artifacts/
