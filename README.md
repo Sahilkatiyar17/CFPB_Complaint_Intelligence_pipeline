@@ -42,7 +42,7 @@ Most academic ML projects stop after training a model. This project goes further
                              │
                              ▼
                NLP Preprocessing Pipeline
-   (Tokenization, Stopwords, Lemmatization, TF-IDF)
+   (Tokenization, Stopwords, Lemmatization, Embeddings)
                              │
                ┌─────────────┴─────────────┐
                ▼                           ▼
@@ -100,7 +100,7 @@ Complaint Narrative
    Text Cleaning
         │
         ▼
- Text Vectorization (TF-IDF)
+ Text Vectorization (Embedding model)
         │
         ▼
 ┌───────────────┬───────────────┐
